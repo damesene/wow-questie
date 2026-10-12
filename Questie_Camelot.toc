@@ -181,6 +181,7 @@ Modules\Map\Moonwell.lua
 Modules\Quest\AvailableQuests\IsLevelRequirementFulfilled.lua
 Modules\Quest\AvailableQuests\AvailableQuests.lua
 Modules\Quest\QuestLogCache.lua
+Modules\Quest\QuestUpdateOrder.lua
 Modules\Quest\DailyQuests\DailyQuests.lua
 Modules\Quest\DailyQuests\QuestHubs.lua
 Modules\Quest\IsleOfQuelDanas.lua
@@ -235,6 +236,7 @@ Modules\Tracker\Sorter\byComplete.lua
 Modules\Tracker\Sorter\byLevel.lua
 Modules\Tracker\Sorter\byZone.lua
 Modules\Tracker\Sorter\byAccepted.lua
+Modules\Tracker\Sorter\byLastUpdate.lua
 Modules\Tracker\TrackerUtils.lua
 Modules\Tracker\TrackerActiveQuest.lua
 Modules\Tracker\TrackerQuestFilter.lua

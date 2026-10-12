@@ -742,6 +742,9 @@ describe("TrackerData", function()
             local tracker = QuestieLoader:ImportModule("QuestieTracker")
             tracker.Update = function() TrackerData.Refresh() end
             tracker.UpdateQuestLines = function(id) TrackerData.RefreshQuest(id) end
+            Questie.db.char.questUpdateOrder = {}
+            Questie.db.char.questUpdateCounter = 0
+            dofile("Modules/Quest/QuestUpdateOrder.lua")
             dofile("Modules/EventHandler/QuestEventHandler.lua")
             QuestEventHandler = QuestieLoader:ImportModule("QuestEventHandler")
         end)

@@ -46,6 +46,8 @@ describe("QuestEventHandler", function()
     local QuestEventHandler
     ---@type BreadcrumbQuests
     local BreadcrumbQuests
+    ---@type QuestUpdateOrder
+    local QuestUpdateOrder
     local originalTimer, originalTime, newTimerMock, retryTimers
 
     before_each(function()
@@ -63,6 +65,12 @@ describe("QuestEventHandler", function()
         BreadcrumbQuests = QuestieLoader:ImportModule("BreadcrumbQuests")
         BreadcrumbQuests.CheckQuestBreadcrumbs = spy.new(function() end)
         QuestLogCache = QuestieLoader:ImportModule("QuestLogCache")
+        QuestLogCache.TryGetQuest = function() return nil end
+        QuestUpdateOrder = QuestieLoader:ImportModule("QuestUpdateOrder")
+        QuestUpdateOrder.Record = spy.new(function() end)
+        QuestUpdateOrder.Remove = spy.new(function() end)
+        QuestUpdateOrder.Prune = spy.new(function() end)
+        QuestUpdateOrder.HasProgressed = function() return false end
         QuestieQuest = QuestieLoader:ImportModule("QuestieQuest")
         QuestLifecycle = QuestieLoader:ImportModule("QuestLifecycle")
         AutoQuesting = QuestieLoader:ImportModule("AutoQuesting")
@@ -218,6 +226,7 @@ describe("QuestEventHandler", function()
         assert.spy(QuestLogCache.CheckForChanges).was.called_with({[QUEST_ID] = true})
         assert.spy(QuestieQuest.SetObjectivesDirty).was.called_with(QuestieQuest, QUEST_ID)
         assert.spy(QuestieJourney.AcceptQuest).was.called_with(QuestieJourney, QUEST_ID)
+        assert.spy(QuestUpdateOrder.Record).was.called_with(QUEST_ID)
         assert.spy(QuestieAnnounce.AcceptedQuest).was.called_with(QuestieAnnounce, QUEST_ID)
         assert.spy(QuestLifecycle.AcceptQuest).was.called_with(QuestLifecycle, QUEST_ID)
         assert.spy(BreadcrumbQuests.CheckQuestBreadcrumbs).was.called(1)
@@ -322,6 +331,7 @@ describe("QuestEventHandler", function()
         assert.spy(QuestLifecycle.AbandonQuest).was.called_with(QuestLifecycle, QUEST_ID)
         assert.spy(QuestieJourney.AbandonQuest).was.called_with(QuestieJourney, QUEST_ID)
         assert.spy(QuestieAnnounce.AbandonedQuest).was.called_with(QuestieAnnounce, QUEST_ID)
+        assert.spy(QuestUpdateOrder.Remove).was.called_with(QUEST_ID)
         assert.spy(AvailableQuests.ResetLastNpcGuid).was.called()
 
         assert.spy(QuestLogCache.CheckForChanges).was.called_with({[QUEST_ID] = true})
@@ -377,6 +387,7 @@ describe("QuestEventHandler", function()
 
         assert.spy(cancelSpy).was.called()
         assert.spy(QuestLogCache.RemoveQuest).was.called_with(QUEST_ID)
+        assert.spy(QuestUpdateOrder.Remove).was.called_with(QUEST_ID)
         assert.spy(QuestieQuest.SetObjectivesDirty).was.called_with(QuestieQuest, QUEST_ID)
         assert.spy(QuestLifecycle.CompleteQuest).was.called_with(QuestLifecycle, QUEST_ID)
         assert.spy(QuestieJourney.CompleteQuest).was.called_with(QuestieJourney, QUEST_ID)
@@ -424,6 +435,64 @@ describe("QuestEventHandler", function()
         assert.spy(QuestieQuest.UpdateQuest).was.called_with(QuestieQuest, QUEST_ID)
         assert.spy(QuestieTracker.UpdateQuestLines).was.called_with(QUEST_ID)
         assert.spy(QuestieTracker.Update).was.called()
+    end)
+
+    describe("quest update order", function()
+        local cachedQuest
+
+        before_each(function()
+            _G.C_Timer = {After = function(_, callback) callback() end}
+            QuestLogCache.TryGetQuest = function() return cachedQuest end
+            QuestUpdateOrder.HasProgressed = function(previous, current) return current.objectives[1] > previous.objectives[1] end
+            QuestiePlayer.currentQuestlog[QUEST_ID] = {}
+            QuestieQuest.SetObjectivesDirty = spy.new(function() end)
+            QuestieNameplate.UpdateNameplate = spy.new(function() end)
+            QuestieQuest.UpdateQuest = spy.new(function() end)
+            QuestieTracker.UpdateQuestLines = spy.new(function() end)
+        end)
+
+        ---@param before table? The cached quest before the check, nil when it is new to the cache
+        ---@param after table The cached quest after the check
+        local function _ChangeCache(before, after)
+            cachedQuest = before
+            QuestLogCache.CheckForChanges = spy.new(function()
+                cachedQuest = after
+                return false, {[QUEST_ID] = {1}}
+            end)
+        end
+
+        it("should record progress of a quest that was already cached", function()
+            _ChangeCache({objectives = {1}}, {objectives = {2}})
+
+            QuestEventHandler.QuestWatchUpdate(QUEST_ID)
+            QuestEventHandler.QuestLogUpdate()
+
+            assert.spy(QuestUpdateOrder.Record).was.called_with(QUEST_ID)
+        end)
+
+        it("should not record a quest that is new to the cache", function()
+            _ChangeCache(nil, {objectives = {2}})
+
+            QuestEventHandler.QuestWatchUpdate(QUEST_ID)
+            QuestEventHandler.QuestLogUpdate()
+
+            assert.spy(QuestUpdateOrder.Record).was.not_called()
+        end)
+
+        it("should not record a change that is no progress", function()
+            _ChangeCache({objectives = {2}}, {objectives = {1}})
+
+            QuestEventHandler.QuestWatchUpdate(QUEST_ID)
+            QuestEventHandler.QuestLogUpdate()
+
+            assert.spy(QuestUpdateOrder.Record).was.not_called()
+        end)
+
+        it("should forget quests that left the quest log at login", function()
+            QuestEventHandler.InitQuestLogStates({[QUEST_ID] = true})
+
+            assert.spy(QuestUpdateOrder.Prune).was.called_with({[QUEST_ID] = true})
+        end)
     end)
 
     it("should handle QUEST_AUTOCOMPLETE", function()

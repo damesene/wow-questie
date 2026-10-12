@@ -230,6 +230,8 @@ function QuestieOptionsDefaults:Load()
                 pvp = {},
             },
             journey = {},
+            questUpdateOrder = {},
+            questUpdateCounter = 0,
             isTrackerExpanded = true,
             TrackerHiddenQuests = {},
             TrackerHiddenObjectives = {},

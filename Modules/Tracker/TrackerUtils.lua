@@ -665,6 +665,10 @@ local function _GetZoneName(zoneOrSort, questId, nativeHeader)
             zoneName = "Quests (By Accepted)"
         elseif sortObj == "byAcceptedReversed" then
             zoneName = "Quests (By Accepted Reversed)"
+        elseif sortObj == "byLastUpdate" then
+            zoneName = "Quests (By Last Update)"
+        elseif sortObj == "byLastUpdateReversed" then
+            zoneName = "Quests (By Last Update Reversed)"
         end
     end
     return zoneName or "Unknown Zone"
@@ -728,6 +732,10 @@ function TrackerUtils:GetSortedQuestIds()
         Sorter.byAccepted(sortedQuestIds, questDetails)
     elseif sortObj == "byAcceptedReversed" then
         Sorter.byAcceptedReverse(sortedQuestIds, questDetails)
+    elseif sortObj == "byLastUpdate" then
+        Sorter.byLastUpdate(sortedQuestIds, questDetails)
+    elseif sortObj == "byLastUpdateReversed" then
+        Sorter.byLastUpdateReverse(sortedQuestIds, questDetails)
     elseif sortObj == "byZonePlayerProximity" or sortObj == "byZonePlayerProximityReversed" then
         local toSort = {}
         local continent = _GetContinent(C_Map.GetBestMapForUnit("player"))

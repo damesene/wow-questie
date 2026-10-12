@@ -31,6 +31,7 @@ describe("Sorter", function()
 
             assert.are_same({
                 "byComplete", "byCompleteReversed", "byLevel", "byLevelReversed", "byAccepted", "byAcceptedReversed",
+                "byLastUpdate", "byLastUpdateReversed",
                 "byProximity", "byProximityReversed",
                 "byZone", "byZonePlayerProximity", "byZonePlayerProximityReversed",
             }, keys)
