@@ -99,6 +99,7 @@ function QuestieOptionsDefaults:Load()
             listAchievementsFirst = false,
             stickyVoiceOverFrame = false,
             alwaysShowTracker = false,
+            trackerShowSortButton = false,
             trackerColorObjectives = "minimal",
             trackerSortObjectives = "byZone",
             trackerbindSetTomTom = "ctrlleft",
