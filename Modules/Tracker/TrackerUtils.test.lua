@@ -1014,6 +1014,14 @@ describe("TrackerUtils", function()
 
             assert.are.equal("Quests (By Level)", TrackerUtils.GetQuestGroupName({Id = 1, zoneName = "Northshire Abbey", zoneOrSort = 12}))
         end)
+
+        it("uses a single group when sorting by the last update of quests", function()
+            Questie.db.profile.trackerSortObjectives = "byLastUpdate"
+            assert.are.equal("Quests (By Last Update)", TrackerUtils.GetQuestGroupName({Id = 1, zoneName = "Northshire Abbey", zoneOrSort = 12}))
+
+            Questie.db.profile.trackerSortObjectives = "byLastUpdateReversed"
+            assert.are.equal("Quests (By Last Update Reversed)", TrackerUtils.GetQuestGroupName({Id = 1, zoneName = "Northshire Abbey", zoneOrSort = 12}))
+        end)
     end)
 
     describe("GetSortedQuestIds", function()
@@ -1026,6 +1034,8 @@ describe("TrackerUtils", function()
             dofile("Modules/Tracker/Sorter/byComplete.lua")
             dofile("Modules/Tracker/Sorter/byLevel.lua")
             dofile("Modules/Tracker/Sorter/byZone.lua")
+            dofile("Modules/Quest/QuestUpdateOrder.lua")
+            dofile("Modules/Tracker/Sorter/byLastUpdate.lua")
 
             _G.C_Map = {
                 GetAreaInfo = function(zoneId)
@@ -1100,6 +1110,20 @@ describe("TrackerUtils", function()
             local sortedIds = TrackerUtils:GetSortedQuestIds()
 
             assert.are_same({8, 6, 1, 9, 10, 13, 12, 11, 4, 2, 5, 7, 3}, sortedIds)
+        end)
+
+        it("should return quest IDs sorted by their last update for 'byLastUpdate' and 'byLastUpdateReversed' sorting", function()
+            Questie.db.char.questUpdateOrder = {[1] = 2, [2] = 1}
+            trackerQuests = {
+                [1] = {Id = 1, level = 10, IsComplete = function() return 0 end, Objectives = {}},
+                [2] = {Id = 2, level = 10, IsComplete = function() return 0 end, Objectives = {}},
+            }
+
+            Questie.db.profile.trackerSortObjectives = "byLastUpdate"
+            assert.are_same({2, 1}, (TrackerUtils:GetSortedQuestIds()))
+
+            Questie.db.profile.trackerSortObjectives = "byLastUpdateReversed"
+            assert.are_same({1, 2}, (TrackerUtils:GetSortedQuestIds()))
         end)
 
         it("should return quest IDs correctly sorted for 'byComplete' sorting", function()

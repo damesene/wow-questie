@@ -904,6 +904,30 @@ local trackerOptionsLocales = {
         ["zhCN"] = "按完成度 %%（反向）",
         ["zhTW"] = "依完成度 %%（反向）",
     },
+    ["By Last Update"] = {
+        ["enUS"] = true,
+        ["deDE"] = "Nach letzter Änderung", -- AI 🤖
+        ["esES"] = "Por última actualización", -- AI 🤖
+        ["esMX"] = "Por última actualización", -- AI 🤖
+        ["frFR"] = "Par dernière mise à jour", -- AI 🤖
+        ["koKR"] = "최근 진행 순서", -- AI 🤖
+        ["ptBR"] = "Por última atualização", -- AI 🤖
+        ["ruRU"] = "По последнему изменению", -- AI 🤖
+        ["zhCN"] = "按最近更新", -- AI 🤖
+        ["zhTW"] = "依最近更新", -- AI 🤖
+    },
+    ["By Last Update (Reversed)"] = {
+        ["enUS"] = true,
+        ["deDE"] = "Nach letzter Änderung (Absteigend)", -- AI 🤖
+        ["esES"] = "Por última actualización (inverso)", -- AI 🤖
+        ["esMX"] = "Por última actualización (inverso)", -- AI 🤖
+        ["frFR"] = "Par dernière mise à jour (inversé)", -- AI 🤖
+        ["koKR"] = "최근 진행 순서 (역순)", -- AI 🤖
+        ["ptBR"] = "Por última atualização (invertido)", -- AI 🤖
+        ["ruRU"] = "По последнему изменению (убыв.)", -- AI 🤖
+        ["zhCN"] = "按最近更新（反向）", -- AI 🤖
+        ["zhTW"] = "依最近更新（反向）", -- AI 🤖
+    },
     ["By Level"] = {
         ["enUS"] = true,
         ["deDE"] = "Nach Level",

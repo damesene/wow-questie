@@ -63,4 +63,14 @@ describe("tracker automatic tracking option", function()
         assert.spy(visibility.ScheduleSnapshot).was.called_with(visibility, "AUTO_TRACK_QUESTS")
         assert.spy(compat.QuestLog_Update).was.not_called()
     end)
+
+    it("offers sorting by last update in the sorting option", function()
+        dofile("Localization/l10n.lua")
+        local settings = options.tabs.tracker:Initialize()
+
+        local values = settings.args.group_quests.args.group_tracker.args.sortObjectives.values()
+
+        assert.are.equal("By Last Update", values.byLastUpdate)
+        assert.are.equal("By Last Update (Reversed)", values.byLastUpdateReversed)
+    end)
 end)
