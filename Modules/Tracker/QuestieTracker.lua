@@ -22,6 +22,8 @@ local TrackerQuestTimers = QuestieLoader:ImportModule("TrackerQuestTimers")
 local TrackerUtils = QuestieLoader:ImportModule("TrackerUtils")
 ---@type TrackerData
 local TrackerData = QuestieLoader:ImportModule("TrackerData")
+---@type TrackerQuestFilter
+local TrackerQuestFilter = QuestieLoader:ImportModule("TrackerQuestFilter")
 ---@type AutoCompleteFrame
 local AutoCompleteFrame = QuestieLoader:ImportModule("AutoCompleteFrame")
 ---@type ChallengeModeTimer
@@ -966,6 +968,7 @@ function QuestieTracker:Update()
     local line
 
     local sortedQuestIds, questDetails = TrackerUtils:GetSortedQuestIds()
+    sortedQuestIds = TrackerQuestFilter.FilterQuestIds(sortedQuestIds, questDetails)
 
     local firstQuestInZone = false
     local zoneCheck
@@ -1824,10 +1827,16 @@ function QuestieTracker:Update()
     end
 
     local _, instanceType, _, difficultyName = GetInstanceInfo()
-    if Expansions.Current >= Expansions.MoP and instanceType ~= "none" and difficultyName == "Challenge Mode" then
+    local isChallengeMode = Expansions.Current >= Expansions.MoP and instanceType ~= "none" and difficultyName == "Challenge Mode"
+    local isScenario = Expansions.Current >= Expansions.MoP and instanceType == "scenario"
+
+    -- Challenge Mode and Scenarios list criteria instead of quests, there is nothing to filter
+    TrackerQuestFrame.UpdateFilterBox(not (isChallengeMode or isScenario))
+
+    if isChallengeMode then
         -- Challenge Mode is active, so we only show the Challenge Mode objectives
         _UpdateChallengeModeObjectives()
-    elseif Expansions.Current >= Expansions.MoP and instanceType == "scenario" then
+    elseif isScenario then
         -- Scenario is active, so we only show the Scenario objectives
         _UpdateScenarioObjectives()
     else
@@ -1843,6 +1852,26 @@ function QuestieTracker:Update()
         else
             _UpdateQuests()
             _UpdateAchievements()
+        end
+
+        -- Without any line the tracker keeps its old size, so a filter that hides every quest says so instead
+        if TrackerQuestFilter.IsActive() and TrackerLinePool.GetHighestIndex() == 0 then
+            line = TrackerLinePool.GetZoneLine("")
+            if line then
+                line.expandZone:Hide()
+                line.label:SetText("|cFFC0C0C0" .. l10n("No matching Quests") .. "|r")
+
+                QuestieTracker:UpdateWidth(line.label:GetUnboundedStringWidth() + trackerMarginLeft + trackerMarginRight)
+                line.label:SetWidth(trackerBaseFrame:GetWidth() - trackerMarginLeft - trackerMarginRight)
+                line:SetWidth(line.label:GetWidth())
+                trackerLineWidth = math.max(trackerLineWidth, line.label:GetUnboundedStringWidth() + trackerMarginLeft)
+
+                line:SetHeight(line.label:GetHeight())
+                line:Show()
+                line.label:Show()
+                line.Quest = nil
+                line.Objective = nil
+            end
         end
     end
 
@@ -1953,10 +1982,10 @@ function QuestieTracker:UpdateFormatting()
 
     if Questie.db.profile.trackerHeaderEnabled or (Questie.db.profile.alwaysShowTracker and not TrackerUtils.HasQuest()) then
         QuestieCompat.SetResizeBounds(trackerBaseFrame, trackerHeaderFrame:GetWidth() + Questie.db.profile.trackerFontSizeHeader + 10,
-            trackerHeaderFrame:GetHeight() + Questie.db.profile.trackerFontSizeZone + 23)
+            trackerHeaderFrame:GetHeight() + Questie.db.profile.trackerFontSizeZone + 23 + TrackerQuestFrame.GetFilterBoxHeight())
     else
         QuestieCompat.SetResizeBounds(trackerBaseFrame, (TrackerLinePool.GetFirstLine().label:GetUnboundedStringWidth() + 40),
-            Questie.db.profile.trackerFontSizeZone + 22)
+            Questie.db.profile.trackerFontSizeZone + 22 + TrackerQuestFrame.GetFilterBoxHeight())
     end
 
     TrackerUtils:ShowVoiceOverPlayButtons()
@@ -2009,6 +2038,11 @@ function QuestieTracker:UpdateHeight()
     local trackerHeaderlessHeight = Questie.db.profile.trackerFontSizeZone + 22
 
     if Questie.db.char.isTrackerExpanded then
+        -- The quest filter box sits above the quests, the smallest tracker still needs room for it
+        local filterBoxHeight = TrackerQuestFrame.GetFilterBoxHeight()
+        trackerHeaderFrameHeight = trackerHeaderFrameHeight + filterBoxHeight
+        trackerHeaderlessHeight = trackerHeaderlessHeight + filterBoxHeight
+
         -- Removes any padding from the last line in the tracker
         local currentLine = TrackerLinePool.GetCurrentLine()
         local firstLine = TrackerLinePool.GetFirstLine()
@@ -2027,7 +2061,7 @@ function QuestieTracker:UpdateHeight()
         end
 
         -- Set the baseFrame to full height so we can measure it
-        trackerQuestFrame:SetHeight(trackerQuestFrame.ScrollChildFrame:GetHeight())
+        trackerQuestFrame:SetHeight(trackerQuestFrame.ScrollChildFrame:GetHeight() + filterBoxHeight)
 
         if Questie.db.profile.trackerHeaderEnabled or (Questie.db.profile.alwaysShowTracker and not TrackerUtils.HasQuest()) then
             trackerBaseFrame:SetHeight(trackerQuestFrame:GetHeight() + trackerHeaderFrame:GetHeight() + 20)

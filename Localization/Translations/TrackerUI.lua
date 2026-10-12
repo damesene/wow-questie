@@ -533,6 +533,18 @@ local trackerUILocales = {
         ["zhCN"] = "暴雪计时器启动！",
         ["zhTW"] = "暴雪計時器啟動！",
     },
+    ["No matching Quests"] = {
+        ["enUS"] = true,
+        ["deDE"] = false,
+        ["esES"] = false,
+        ["esMX"] = false,
+        ["frFR"] = false,
+        ["koKR"] = false,
+        ["ptBR"] = false,
+        ["ruRU"] = false,
+        ["zhCN"] = false,
+        ["zhTW"] = false,
+    },
     ["Time's up!"] = {
         ["enUS"] = true,
         ["deDE"] = "Zeit abgelaufen!",
