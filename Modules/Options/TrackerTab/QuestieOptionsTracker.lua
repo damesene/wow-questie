@@ -403,6 +403,8 @@ function QuestieOptions.tabs.tracker:Initialize()
                                         ["byCompleteReversed"] = l10n("By %% Complete (Reversed)"),
                                         ["byLevel"] = l10n("By Level"),
                                         ["byLevelReversed"] = l10n("By Level (Reversed)"),
+                                        ["byLastUpdate"] = l10n("By Last Update"),
+                                        ["byLastUpdateReversed"] = l10n("By Last Update (Reversed)"),
                                         ["byProximity"] = l10n("By Proximity"),
                                         ["byProximityReversed"] = l10n("By Proximity (Reversed)"),
                                         ["byZone"] = l10n("By Zone"),

@@ -10,6 +10,8 @@ local _QuestEventHandler = QuestEventHandler.private
 QuestEventHandler.private = QuestEventHandler.private or {}
 ---@type QuestLogCache
 local QuestLogCache = QuestieLoader:ImportModule("QuestLogCache")
+---@type QuestUpdateOrder
+local QuestUpdateOrder = QuestieLoader:ImportModule("QuestUpdateOrder")
 ---@type QuestieQuest
 local QuestieQuest = QuestieLoader:ImportModule("QuestieQuest")
 ---@type QuestieJourney
@@ -261,6 +263,7 @@ function QuestEventHandler.InitQuestLogStates(changes)
         }
         QuestieLib.RepairMissingItemNames(questId)
     end
+    QuestUpdateOrder.Prune(changes)
 end
 
 --- Fires when a quest is accepted in anyway.
@@ -333,6 +336,7 @@ function _QuestEventHandler:HandleQuestAccepted(questId, isRetry)
     QuestieQuest:SetObjectivesDirty(questId)
 
     QuestieJourney:AcceptQuest(questId)
+    QuestUpdateOrder.Record(questId)
     QuestieAnnounce:AcceptedQuest(questId)
 
     QuestieAPI.PropagateQuestUpdate(questId, {}, QuestieAPI.Enums.QuestUpdateTriggerReason.QUEST_ACCEPTED)
@@ -390,6 +394,7 @@ function QuestEventHandler.QuestTurnedIn(questId, xpReward, moneyReward)
     end
 
     QuestLogCache.RemoveQuest(questId)
+    QuestUpdateOrder.Remove(questId)
     QuestieQuest:SetObjectivesDirty(questId) -- is this necessary? should whole quest.Objectives be cleared at some point of quest removal?
     QuestLifecycle:CompleteQuest(questId)
     QuestieAPI.PropagateQuestUpdate(questId, {}, QuestieAPI.Enums.QuestUpdateTriggerReason.QUEST_TURNED_IN)
@@ -437,6 +442,7 @@ function _QuestEventHandler:MarkQuestAsAbandoned(questId)
         Questie.Debug(Questie.DEBUG_INFO, "Quest:", questId, "was abandoned")
 
         QuestLogCache.RemoveQuest(questId)
+        QuestUpdateOrder.Remove(questId)
         QuestieQuest:SetObjectivesDirty(questId)
         QuestLifecycle:AbandonQuest(questId)
         questLog[questId] = nil
@@ -553,6 +559,13 @@ function _QuestEventHandler:UpdateAllQuests(doRetryWithoutChanges)
         end
     end
 
+    -- Compared after the check to tell progress from other changes. A quest new to the cache,
+    -- e.g. one whose data loads late after login, has no snapshot and did not progress.
+    local previousQuests = {}
+    for questId in pairs(questIdsToCheck) do
+        previousQuests[questId] = QuestLogCache.TryGetQuest(questId)
+    end
+
     local cacheMiss, changes = QuestLogCache.CheckForChanges(questIdsToCheck)
     -- A successful accepted-quest scan does not mean pending accepts are ready. Keep the fallback for either
     -- case; otherwise a new quest could remain title-only forever if Blizzard sends no further event.
@@ -563,6 +576,19 @@ function _QuestEventHandler:UpdateAllQuests(doRetryWithoutChanges)
     end
 
     if next(changes) then
+        -- Quests progressed by the same event are recorded in a fixed order
+        local progressedQuestIds = {}
+        for questId in pairs(changes) do
+            local previous, current = previousQuests[questId], QuestLogCache.TryGetQuest(questId)
+            if previous and current and QuestUpdateOrder.HasProgressed(previous, current) then
+                table.insert(progressedQuestIds, questId)
+            end
+        end
+        table.sort(progressedQuestIds)
+        for _, questId in ipairs(progressedQuestIds) do
+            QuestUpdateOrder.Record(questId)
+        end
+
         for questId, objIds in pairs(changes) do
             if (not QuestiePlayer.currentQuestlog[questId]) then
                 -- If quests are not in the cache right after login (e.g. the API is really slow), they are not added to the player's quest log.
