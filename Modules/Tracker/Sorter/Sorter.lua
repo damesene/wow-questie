@@ -24,6 +24,8 @@ function Sorter.GetSortOptions()
         {key = "byCompleteReversed", label = l10n("By %% Complete (Reversed)")},
         {key = "byLevel", label = l10n("By Level")},
         {key = "byLevelReversed", label = l10n("By Level (Reversed)")},
+        {key = "byAccepted", label = l10n("By Accepted")},
+        {key = "byAcceptedReversed", label = l10n("By Accepted (Reversed)")},
         {key = "byProximity", label = l10n("By Proximity")},
         {key = "byProximityReversed", label = l10n("By Proximity (Reversed)")},
         {key = "byZone", label = l10n("By Zone")},
