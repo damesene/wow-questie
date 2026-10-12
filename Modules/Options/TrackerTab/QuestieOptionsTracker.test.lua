@@ -63,4 +63,40 @@ describe("tracker automatic tracking option", function()
         assert.spy(visibility.ScheduleSnapshot).was.called_with(visibility, "AUTO_TRACK_QUESTS")
         assert.spy(compat.QuestLog_Update).was.not_called()
     end)
+
+    describe("sort button option", function()
+        local sortButton
+
+        before_each(function()
+            Questie.db.profile.trackerEnabled = true
+            tracker.UpdateFormatting = spy.new(function() end)
+            sortButton = options.tabs.tracker:Initialize().args.group_tracker.args.group_header.args.showSortButton
+        end)
+
+        it("updates the tracker when the sort button is toggled", function()
+            sortButton.set(nil, true)
+
+            assert.is_true(Questie.db.profile.trackerShowSortButton)
+            assert.spy(tracker.UpdateFormatting).was.called(1)
+        end)
+
+        it("can only be changed while the tracker header is enabled", function()
+            Questie.db.profile.trackerHeaderEnabled = false
+            assert.is_true(sortButton.disabled())
+
+            Questie.db.profile.trackerHeaderEnabled = true
+            assert.is_false(sortButton.disabled())
+        end)
+    end)
+
+    it("offers every way of sorting in the sorting option", function()
+        dofile("Localization/l10n.lua")
+        dofile("Modules/Tracker/Sorter/Sorter.lua")
+        local settings = options.tabs.tracker:Initialize()
+
+        local values = settings.args.group_quests.args.group_tracker.args.sortObjectives.values()
+
+        assert.are.equal("By Level", values.byLevel)
+        assert.are.equal("By Zone Prox (Reversed)", values.byZonePlayerProximityReversed)
+    end)
 end)

@@ -12,6 +12,8 @@ local TrackerBaseFrame = QuestieLoader:ImportModule("TrackerBaseFrame")
 local TrackerFadeTicker = QuestieLoader:ImportModule("TrackerFadeTicker")
 ---@type TrackerUtils
 local TrackerUtils = QuestieLoader:ImportModule("TrackerUtils")
+---@type TrackerSortButton
+local TrackerSortButton = QuestieLoader:ImportModule("TrackerSortButton")
 -------------------------
 --Import Questie modules.
 -------------------------
@@ -196,6 +198,8 @@ function TrackerHeaderFrame.Initialize(baseFrame, OnTrackedQuestClick)
 
     headerFrame.trackedQuests = trackedQuests
 
+    TrackerSortButton.Initialize(headerFrame)
+
     if Questie.db.profile.trackerHeaderEnabled or (not TrackerUtils.HasQuest()) then
         headerFrame:SetSize(1, Questie.db.profile.trackerFontSizeHeader) -- Width is updated later on
     else
@@ -244,11 +248,18 @@ function TrackerHeaderFrame:Update()
         headerFrame.trackedQuests:SetPoint("TOPLEFT", headerFrame.questieIcon, "TOPRIGHT", 2, 0)
         headerFrame.trackedQuests:Show()
 
-        headerFrame:SetWidth(headerFrame.trackedQuests.label:GetUnboundedStringWidth() + trackerFontSizeHeader)
+        local showSortButton = TrackerSortButton.IsShown()
+        local headerWidth = headerFrame.trackedQuests.label:GetUnboundedStringWidth() + trackerFontSizeHeader
+        if showSortButton then
+            -- The tracker is at least as wide as its header, so the sort button never covers the header text
+            headerWidth = headerWidth + trackerFontSizeHeader + TrackerSortButton.SPACING
+        end
+        headerFrame:SetWidth(headerWidth)
         headerFrame:SetHeight(trackerFontSizeHeader + 5)
         headerFrame:Show()
 
         TrackerHeaderFrame.PositionTrackerHeaderFrame(headerFrame, trackerBaseFrame)
+        TrackerSortButton.Update(trackerBaseFrame, trackerFontSizeHeader, showSortButton)
 
         QuestieCompat.SetResizeBounds(trackerBaseFrame, headerFrame.trackedQuests.label:GetUnboundedStringWidth(), trackerFontSizeHeader)
     else
