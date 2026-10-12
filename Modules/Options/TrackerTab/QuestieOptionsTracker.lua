@@ -18,6 +18,8 @@ local TrackerLinePool = QuestieLoader:ImportModule("TrackerLinePool")
 local TrackerQuestTimers = QuestieLoader:ImportModule("TrackerQuestTimers")
 ---@type TrackerActiveQuest
 local TrackerActiveQuest = QuestieLoader:ImportModule("TrackerActiveQuest")
+---@type Sorter
+local Sorter = QuestieLoader:ImportModule("Sorter")
 ---@type Expansions
 local Expansions = QuestieLoader:ImportModule("Expansions")
 ---@type CommsVisibility
@@ -428,17 +430,11 @@ function QuestieOptions.tabs.tracker:Initialize()
                                 type = "select",
                                 order = 10,
                                 values = function()
-                                    return {
-                                        ["byComplete"] = l10n("By %% Complete"),
-                                        ["byCompleteReversed"] = l10n("By %% Complete (Reversed)"),
-                                        ["byLevel"] = l10n("By Level"),
-                                        ["byLevelReversed"] = l10n("By Level (Reversed)"),
-                                        ["byProximity"] = l10n("By Proximity"),
-                                        ["byProximityReversed"] = l10n("By Proximity (Reversed)"),
-                                        ["byZone"] = l10n("By Zone"),
-                                        ["byZonePlayerProximity"] = l10n("By Zone Prox"),
-                                        ["byZonePlayerProximityReversed"] = l10n("By Zone Prox (Reversed)"),
-                                    }
+                                    local values = {}
+                                    for _, sortOption in ipairs(Sorter.GetSortOptions()) do
+                                        values[sortOption.key] = sortOption.label
+                                    end
+                                    return values
                                 end,
                                 style = "dropdown",
                                 name = function() return l10n("Objective Sorting") end,
@@ -446,8 +442,7 @@ function QuestieOptions.tabs.tracker:Initialize()
                                 disabled = function() return not Questie.db.profile.trackerEnabled end,
                                 get = function() return Questie.db.profile.trackerSortObjectives end,
                                 set = function(_, key)
-                                    Questie.db.profile.trackerSortObjectives = key
-                                    QuestieTracker:Update()
+                                    Sorter.SetSorting(key)
                                 end
                             },
                             Spacer_ActiveQuest = QuestieOptionsUtils:Spacer(11, function() return not TrackerActiveQuest.IsAvailable() end),
@@ -869,6 +864,19 @@ function QuestieOptions.tabs.tracker:Initialize()
                                     if (Questie.db.profile.alwaysShowTracker == true) and (Questie.db.char.isTrackerExpanded == false) then
                                         Questie.db.char.isTrackerExpanded = true
                                     end
+                                    QuestieTracker:UpdateFormatting()
+                                end
+                            },
+                            showSortButton = {
+                                type = "toggle",
+                                order = 4,
+                                width = 1.5,
+                                name = function() return l10n("Show Sorting Button") end,
+                                desc = function() return l10n("If checked, a button on the right side of the Tracker Header changes how the Questie Tracker sorts Quests.\n\nNOTE: This needs the Tracker Header to be enabled.") end,
+                                disabled = function() return not Questie.db.profile.trackerEnabled or not Questie.db.profile.trackerHeaderEnabled end,
+                                get = function() return Questie.db.profile.trackerShowSortButton end,
+                                set = function(_, value)
+                                    Questie.db.profile.trackerShowSortButton = value
                                     QuestieTracker:UpdateFormatting()
                                 end
                             },

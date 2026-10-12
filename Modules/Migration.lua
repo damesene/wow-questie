@@ -278,6 +278,9 @@ local migrationFunctions = {
     [43] = function()
         Questie.db.profile.trackerShowQuestFilter = false
     end,
+    [44] = function()
+        Questie.db.profile.trackerShowSortButton = false
+    end,
 }
 
 function Migration:Migrate()
