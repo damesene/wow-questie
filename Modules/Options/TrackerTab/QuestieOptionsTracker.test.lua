@@ -63,4 +63,13 @@ describe("tracker automatic tracking option", function()
         assert.spy(visibility.ScheduleSnapshot).was.called_with(visibility, "AUTO_TRACK_QUESTS")
         assert.spy(compat.QuestLog_Update).was.not_called()
     end)
+
+    it("updates the tracker when the quest filter is toggled", function()
+        local settings = options.tabs.tracker:Initialize()
+
+        settings.args.group_quests.args.showQuestFilter.set(nil, true)
+
+        assert.is_true(Questie.db.profile.trackerShowQuestFilter)
+        assert.spy(tracker.Update).was.called_with(tracker)
+    end)
 end)

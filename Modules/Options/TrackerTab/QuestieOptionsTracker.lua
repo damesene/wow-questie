@@ -213,6 +213,19 @@ function QuestieOptions.tabs.tracker:Initialize()
                             QuestieTracker:Update()
                         end
                     },
+                    showQuestFilter = {
+                        type = "toggle",
+                        order = 4.1,
+                        width = 1.5,
+                        name = function() return l10n("Show Quest Filter") end,
+                        desc = function() return l10n("If checked, a search box at the top of the Questie Tracker filters the tracked Quests by their title and Objectives while you type.") end,
+                        disabled = function() return not Questie.db.profile.trackerEnabled end,
+                        get = function() return Questie.db.profile.trackerShowQuestFilter end,
+                        set = function(_, value)
+                            Questie.db.profile.trackerShowQuestFilter = value
+                            QuestieTracker:Update()
+                        end
+                    },
                     Spacer_Dropdowns = QuestieOptionsUtils:Spacer(5),
                     openQuestLog = {
                         type = "select",

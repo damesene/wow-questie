@@ -11,8 +11,11 @@ local TrackerBaseFrame = QuestieLoader:ImportModule("TrackerBaseFrame")
 local TrackerFadeTicker = QuestieLoader:ImportModule("TrackerFadeTicker")
 ---@type TrackerUtils
 local TrackerUtils = QuestieLoader:ImportModule("TrackerUtils")
+---@type TrackerQuestFilterBox
+local TrackerQuestFilterBox = QuestieLoader:ImportModule("TrackerQuestFilterBox")
 
 local questFrame, trackerBaseFrame, trackerHeaderFrame
+local filterBoxHeight = 0
 
 function TrackerQuestFrame.Initialize(baseFrame, headerFrame)
     trackerBaseFrame = baseFrame
@@ -42,6 +45,9 @@ function TrackerQuestFrame.Initialize(baseFrame, headerFrame)
     questFrame.ScrollChildFrame:SetSize(questFrame.ScrollFrame:GetWidth(), (questFrame.ScrollFrame:GetHeight()))
 
     questFrame.ScrollFrame:SetScrollChild(questFrame.ScrollChildFrame)
+
+    questFrame.FilterBox = TrackerQuestFilterBox.Initialize(questFrame)
+    filterBoxHeight = 0
 
     questFrame:Hide()
 
@@ -74,6 +80,30 @@ function TrackerQuestFrame:Update()
     else
         questFrame:Hide()
     end
+end
+
+---Shows or hides the quest filter box and places the scrolling quests below it.
+---@param canShow boolean False while the tracker lists no quests to filter
+function TrackerQuestFrame.UpdateFilterBox(canShow)
+    local height = TrackerQuestFilterBox.Update(canShow)
+    if height == filterBoxHeight then
+        return
+    end
+    filterBoxHeight = height
+
+    local scrollFrame = questFrame.ScrollFrame
+    scrollFrame:ClearAllPoints()
+    if height > 0 then
+        scrollFrame:SetPoint("TOPLEFT", questFrame, "TOPLEFT", 0, -height)
+        scrollFrame:SetPoint("BOTTOMRIGHT", questFrame, "BOTTOMRIGHT", 0, 0)
+    else
+        scrollFrame:SetAllPoints(questFrame)
+    end
+end
+
+---@return number height The height the quest filter box takes at the top of the quest frame, 0 when it is hidden
+function TrackerQuestFrame.GetFilterBoxHeight()
+    return filterBoxHeight
 end
 
 function TrackerQuestFrame.PositionTrackedQuestsFrame()
