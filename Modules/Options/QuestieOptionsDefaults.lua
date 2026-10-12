@@ -103,6 +103,7 @@ function QuestieOptionsDefaults:Load()
             trackerSortObjectives = "byZone",
             trackerShowActiveQuestOnTop = false,
             trackerKeepActiveQuestInZone = false,
+            trackerShowQuestFilter = false,
             trackerbindSetTomTom = "ctrlleft",
             trackerbindOpenQuestLog = "left",
             trackerbindUntrack = "shiftleft",

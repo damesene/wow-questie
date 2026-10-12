@@ -114,4 +114,13 @@ describe("tracker automatic tracking option", function()
             assert.is_true(questOptions.group_tracker.args.keepActiveQuestInZone.hidden())
         end)
     end)
+
+    it("updates the tracker when the quest filter is toggled", function()
+        local settings = options.tabs.tracker:Initialize()
+
+        settings.args.group_quests.args.showQuestFilter.set(nil, true)
+
+        assert.is_true(Questie.db.profile.trackerShowQuestFilter)
+        assert.spy(tracker.Update).was.called_with(tracker)
+    end)
 end)

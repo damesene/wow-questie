@@ -11,8 +11,12 @@ local TrackerBaseFrame = QuestieLoader:ImportModule("TrackerBaseFrame")
 local TrackerFadeTicker = QuestieLoader:ImportModule("TrackerFadeTicker")
 ---@type TrackerUtils
 local TrackerUtils = QuestieLoader:ImportModule("TrackerUtils")
+---@type TrackerQuestFilterBox
+local TrackerQuestFilterBox = QuestieLoader:ImportModule("TrackerQuestFilterBox")
 
 local questFrame, trackerBaseFrame, trackerHeaderFrame
+local filterBoxHeight = 0
+local pinnedHeight = 0
 
 function TrackerQuestFrame.Initialize(baseFrame, headerFrame)
     trackerBaseFrame = baseFrame
@@ -45,10 +49,12 @@ function TrackerQuestFrame.Initialize(baseFrame, headerFrame)
 
     -- Holds the lines pinned above the scrolling lines, see TrackerLinePool.PinLines
     questFrame.PinnedFrame = CreateFrame("Frame", "TrackedQuestsPinnedFrame", questFrame)
-    questFrame.PinnedFrame:SetPoint("TOPLEFT", questFrame, "TOPLEFT", 0, 0)
-    questFrame.PinnedFrame:SetPoint("TOPRIGHT", questFrame, "TOPRIGHT", 0, 0)
     questFrame.PinnedFrame:SetHeight(1)
     questFrame.PinnedFrame:Hide()
+
+    questFrame.FilterBox = TrackerQuestFilterBox.Initialize(questFrame)
+    filterBoxHeight = 0
+    pinnedHeight = 0
 
     questFrame:Hide()
 
@@ -83,22 +89,54 @@ function TrackerQuestFrame:Update()
     end
 end
 
----Shows the pinned lines above the scrolling lines, the scroll frame takes the remaining height.
----@param height number Height of the pinned lines, 0 hides the pinned frame
-function TrackerQuestFrame.SetPinnedHeight(height)
+-- From the top: the quest filter box, the pinned lines, then the scrolling lines in the remaining height
+local function _LayoutTopOfQuestFrame()
     local pinnedFrame = questFrame.PinnedFrame
     local scrollFrame = questFrame.ScrollFrame
 
+    pinnedFrame:ClearAllPoints()
+    pinnedFrame:SetPoint("TOPLEFT", questFrame, "TOPLEFT", 0, -filterBoxHeight)
+    pinnedFrame:SetPoint("TOPRIGHT", questFrame, "TOPRIGHT", 0, -filterBoxHeight)
+
     scrollFrame:ClearAllPoints()
-    if height > 0 then
-        pinnedFrame:SetHeight(height)
-        pinnedFrame:Show()
-        scrollFrame:SetPoint("TOPLEFT", pinnedFrame, "BOTTOMLEFT", 0, 0)
+    local scrollTop = filterBoxHeight + pinnedHeight
+    if scrollTop > 0 then
+        scrollFrame:SetPoint("TOPLEFT", questFrame, "TOPLEFT", 0, -scrollTop)
         scrollFrame:SetPoint("BOTTOMRIGHT", questFrame, "BOTTOMRIGHT", 0, 0)
     else
-        pinnedFrame:Hide()
         scrollFrame:SetAllPoints(questFrame)
     end
+end
+
+---Shows the pinned lines above the scrolling lines, the scroll frame takes the remaining height.
+---@param height number Height of the pinned lines, 0 hides the pinned frame
+function TrackerQuestFrame.SetPinnedHeight(height)
+    if height > 0 then
+        questFrame.PinnedFrame:SetHeight(height)
+        questFrame.PinnedFrame:Show()
+    else
+        questFrame.PinnedFrame:Hide()
+    end
+
+    if height ~= pinnedHeight then
+        pinnedHeight = height
+        _LayoutTopOfQuestFrame()
+    end
+end
+
+---Shows or hides the quest filter box and places the pinned and scrolling quests below it.
+---@param canShow boolean False while the tracker lists no quests to filter
+function TrackerQuestFrame.UpdateFilterBox(canShow)
+    local height = TrackerQuestFilterBox.Update(canShow)
+    if height ~= filterBoxHeight then
+        filterBoxHeight = height
+        _LayoutTopOfQuestFrame()
+    end
+end
+
+---@return number height The height the quest filter box takes at the top of the quest frame, 0 when it is hidden
+function TrackerQuestFrame.GetFilterBoxHeight()
+    return filterBoxHeight
 end
 
 function TrackerQuestFrame.PositionTrackedQuestsFrame()

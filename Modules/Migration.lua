@@ -275,6 +275,9 @@ local migrationFunctions = {
         Questie.db.profile.trackerKeepActiveQuestInZone = false
         Questie.db.profile.trackerbindSetActiveQuest = "disabled"
     end,
+    [43] = function()
+        Questie.db.profile.trackerShowQuestFilter = false
+    end,
 }
 
 function Migration:Migrate()

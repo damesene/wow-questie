@@ -43,6 +43,7 @@ describe("QuestieTracker", function()
         QuestieCombatQueue.Queue = function(_, callback) callback() end
 
         dofile("Modules/Tracker/TrackerActiveQuest.lua")
+        dofile("Modules/Tracker/TrackerQuestFilter.lua")
         dofile("Modules/Tracker/QuestieTracker.lua")
         QuestieTracker = QuestieLoader:ImportModule("QuestieTracker")
     end)
@@ -62,6 +63,7 @@ describe("QuestieTracker", function()
             _G.C_Timer = {After = afterMock}
             registerEventMock = stub(Questie, "RegisterEvent")
             dofile("Modules/Tracker/TrackerActiveQuest.lua")
+            dofile("Modules/Tracker/TrackerQuestFilter.lua")
             dofile("Modules/Tracker/QuestieTracker.lua")
         end)
 
@@ -113,6 +115,7 @@ describe("QuestieTracker", function()
             Questie.db.char.trackedAchievementIds = {}
             Questie.db.char.collapsedZones = {}
             dofile("Modules/Tracker/TrackerActiveQuest.lua")
+            dofile("Modules/Tracker/TrackerQuestFilter.lua")
             dofile("Modules/Tracker/QuestieTracker.lua")
             timeMock.returns(1)
         end)
@@ -483,6 +486,8 @@ describe("QuestieTracker", function()
             local frame = QuestieLoader:ImportModule("TrackerQuestFrame")
             frame.Initialize = function() return {} end
             frame.Update = function() end
+            frame.UpdateFilterBox = function() end
+            frame.GetFilterBoxHeight = function() return 0 end
             pool = QuestieLoader:ImportModule("TrackerLinePool")
             pool.Initialize = function() end
             pool.ResetLinesForChange = function() end
@@ -499,6 +504,7 @@ describe("QuestieTracker", function()
 
             dofile("Localization/l10n.lua")
             dofile("Modules/Tracker/TrackerActiveQuest.lua")
+            dofile("Modules/Tracker/TrackerQuestFilter.lua")
             dofile("Modules/Tracker/QuestieTracker.lua")
             QuestieTracker.started = false
             QuestieTracker.alreadyHooked = nil
@@ -525,6 +531,16 @@ describe("QuestieTracker", function()
 
             assert.spy(TrackerData.Refresh).was.called(1)
             assert.spy(TrackerUtils.GetSortedQuestIds).was.called(1)
+        end)
+
+        it("lists only the quests that match the quest filter", function()
+            now = 1
+            local filter = QuestieLoader:ImportModule("TrackerQuestFilter")
+            filter.FilterQuestIds = spy.new(function() return {} end)
+
+            QuestieTracker:Update()
+
+            assert.spy(filter.FilterQuestIds).was.called(1)
         end)
 
         it("refreshes only the affected quest for combat-safe text updates", function()

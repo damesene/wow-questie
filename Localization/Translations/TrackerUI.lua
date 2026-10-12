@@ -569,6 +569,18 @@ local trackerUILocales = {
         ["zhCN"] = false,
         ["zhTW"] = false,
     },
+    ["No matching Quests"] = {
+        ["enUS"] = true,
+        ["deDE"] = false,
+        ["esES"] = false,
+        ["esMX"] = false,
+        ["frFR"] = false,
+        ["koKR"] = false,
+        ["ptBR"] = false,
+        ["ruRU"] = false,
+        ["zhCN"] = false,
+        ["zhTW"] = false,
+    },
     ["Time's up!"] = {
         ["enUS"] = true,
         ["deDE"] = "Zeit abgelaufen!",
