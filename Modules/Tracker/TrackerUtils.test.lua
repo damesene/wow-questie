@@ -1014,6 +1014,14 @@ describe("TrackerUtils", function()
 
             assert.are.equal("Quests (By Level)", TrackerUtils.GetQuestGroupName({Id = 1, zoneName = "Northshire Abbey", zoneOrSort = 12}))
         end)
+
+        it("uses a single group when sorting by when quests were accepted", function()
+            Questie.db.profile.trackerSortObjectives = "byAccepted"
+            assert.are.equal("Quests (By Accepted)", TrackerUtils.GetQuestGroupName({Id = 1, zoneName = "Northshire Abbey", zoneOrSort = 12}))
+
+            Questie.db.profile.trackerSortObjectives = "byAcceptedReversed"
+            assert.are.equal("Quests (By Accepted Reversed)", TrackerUtils.GetQuestGroupName({Id = 1, zoneName = "Northshire Abbey", zoneOrSort = 12}))
+        end)
     end)
 
     describe("GetSortedQuestIds", function()
@@ -1026,6 +1034,7 @@ describe("TrackerUtils", function()
             dofile("Modules/Tracker/Sorter/byComplete.lua")
             dofile("Modules/Tracker/Sorter/byLevel.lua")
             dofile("Modules/Tracker/Sorter/byZone.lua")
+            dofile("Modules/Tracker/Sorter/byAccepted.lua")
 
             _G.C_Map = {
                 GetAreaInfo = function(zoneId)
@@ -1100,6 +1109,23 @@ describe("TrackerUtils", function()
             local sortedIds = TrackerUtils:GetSortedQuestIds()
 
             assert.are_same({8, 6, 1, 9, 10, 13, 12, 11, 4, 2, 5, 7, 3}, sortedIds)
+        end)
+
+        it("should return quest IDs sorted by when they were accepted for 'byAccepted' and 'byAcceptedReversed' sorting", function()
+            Questie.db.char.journey = {
+                {Event = "Quest", SubType = "Accept", Quest = 2, Timestamp = 100},
+                {Event = "Quest", SubType = "Accept", Quest = 1, Timestamp = 200},
+            }
+            trackerQuests = {
+                [1] = {Id = 1, level = 10, IsComplete = function() return 0 end, Objectives = {}},
+                [2] = {Id = 2, level = 10, IsComplete = function() return 0 end, Objectives = {}},
+            }
+
+            Questie.db.profile.trackerSortObjectives = "byAccepted"
+            assert.are_same({2, 1}, (TrackerUtils:GetSortedQuestIds()))
+
+            Questie.db.profile.trackerSortObjectives = "byAcceptedReversed"
+            assert.are_same({1, 2}, (TrackerUtils:GetSortedQuestIds()))
         end)
 
         it("should return quest IDs correctly sorted for 'byComplete' sorting", function()
