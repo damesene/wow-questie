@@ -1011,7 +1011,9 @@ function QuestieTracker:Update(onlyIfChanged)
 
     local secondaryButton = false
     local secondaryButtonAlpha
-    local timerQuestIds = {}
+
+    -- The timer lines of the previous layout are reused for other lines now
+    TrackerQuestTimers.ResetTimerLines()
 
     -- Begin populating the Tracker with Quests
     ---@param questIdsToShow QuestId[]
@@ -1028,8 +1030,7 @@ function QuestieTracker:Update(onlyIfChanged)
             local complete = quest:IsComplete()
             local zoneName = groupName or questDetails[questId].zoneName
 
-            -- A second listing of the quest must not clear the timer line its first listing registered
-            TrackerQuestTimers:UpdateAndGetRemainingTime(quest, nil, not timerQuestIds[quest.Id])
+            TrackerQuestTimers:UpdateAndGetRemainingTime(quest)
             local timedQuest = (quest.trackTimedQuest or quest.timedBlizzardQuest)
 
             if ((complete ~= 1 and not quest.isComplete) or Questie.db.profile.trackerShowCompleteQuests or timedQuest)
@@ -1268,10 +1269,8 @@ function QuestieTracker:Update(onlyIfChanged)
                             line.label.activeTimer = activeTimer
                             line.label:SetText(timerText)
 
-                            -- Only one timer line ticks. A quest listed twice keeps it on its first line, the active quest group.
-                            if activeTimer and (not timerQuestIds[quest.Id]) then
-                                TrackerQuestTimers:UpdateAndGetRemainingTime(quest, line, false)
-                                timerQuestIds[quest.Id] = true
+                            if activeTimer then
+                                TrackerQuestTimers:UpdateAndGetRemainingTime(quest, line)
                             end
 
                             -- Check and measure Timer text width and update tracker width

@@ -497,6 +497,7 @@ describe("QuestieTracker", function()
             pool.GetLastLine = function() return nil end
             pool.PinLines = function() end
             pool.GetHighestIndex = function() return 0 end
+            QuestieLoader:ImportModule("TrackerQuestTimers").ResetTimerLines = spy.new(function() end)
             QuestieLoader:ImportModule("TrackerFadeTicker").Initialize = function() end
             TrackerUtils.IsVoiceOverLoaded = function() return false end
             TrackerUtils.GetSortedQuestIds = spy.new(function()
@@ -543,6 +544,15 @@ describe("QuestieTracker", function()
             QuestieTracker:Update()
 
             assert.spy(filter.FilterQuestIds).was.called(1)
+        end)
+
+        it("forgets the timer lines of the previous layout before laying out the quests", function()
+            now = 1
+            local timers = QuestieLoader:ImportModule("TrackerQuestTimers")
+
+            QuestieTracker:Update()
+
+            assert.spy(timers.ResetTimerLines).was.called(1)
         end)
 
         it("refreshes only the affected quest for combat-safe text updates", function()
