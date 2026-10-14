@@ -159,4 +159,16 @@ describe("tracker automatic tracking option", function()
         assert.are.equal("By Level", values.byLevel)
         assert.are.equal("By Zone Prox (Reversed)", values.byZonePlayerProximityReversed)
     end)
+
+    -- Quest-log checks skip unchanged quests, so this setting must request the quest lines itself.
+    it("lays out the tracker when always showing it expands a minimized tracker", function()
+        tracker.UpdateFormatting = spy.new(function() end)
+        Questie.db.char.isTrackerExpanded = false
+        local settings = options.tabs.tracker:Initialize()
+
+        settings.args.group_tracker.args.group_header.args.alwaysShowTracker.set(nil, true)
+
+        assert.is_true(Questie.db.char.isTrackerExpanded)
+        assert.spy(tracker.Update).was.called_with(tracker)
+    end)
 end)
